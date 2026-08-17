@@ -650,14 +650,28 @@
       </div>
 
       <div class="card">
-        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">ประวัติการสะสมคะแนนหน้าร้าน (Logs)</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main);">ประวัติการสะสมคะแนนหน้าร้าน (Logs)</h3>
+          
+          <!-- Dropdown กรองสาขาด้านบน -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted);">กรองสาขา:</label>
+            <select id="admin-branch-filter" onchange="renderAdminTables()" style="padding: 6px 12px; border: 1px solid var(--border-light); background: #fafafa; border-radius: var(--radius-sm); font-size: 13px; outline: none;">
+              <option value="">ทุกสาขา</option>
+              <option value="Rama 9 (พระราม 9)">Rama 9 (พระราม 9)</option>
+              <option value="Siam Paragon">Siam Paragon</option>
+              <option value="EmQuartier">EmQuartier</option>
+              <option value="Central World">Central World</option>
+            </select>
+          </div>
+        </div>
+
         <div style="overflow-x: auto;">
           <table>
             <thead>
               <tr>
                 <th>วันที่/เวลา</th>
                 <th>เบอร์ลูกค้า</th>
-                <th>สาขา</th>
                 <th>ยอดเงิน</th>
                 <th>คะแนนที่ได้รับ</th>
                 <th>ผู้ลงคะแนน</th>
@@ -988,15 +1002,17 @@
       `).join('');
     }
 
+    const selectedBranch = document.getElementById('admin-branch-filter').value;
+    const filteredLogs = selectedBranch ? posLogs.filter(log => log.branch === selectedBranch) : posLogs;
+
     const tbodyLogs = document.getElementById('admin-logs-table');
-    if (posLogs.length === 0) {
-      tbodyLogs.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">ยังไม่มีประวัติการบันทึก</td></tr>';
+    if (filteredLogs.length === 0) {
+      tbodyLogs.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">ยังไม่มีประวัติการบันทึก</td></tr>';
     } else {
-      tbodyLogs.innerHTML = posLogs.map((log) => `
+      tbodyLogs.innerHTML = filteredLogs.map((log) => `
         <tr>
           <td style="font-size:11px; color:var(--text-muted);">${log.date}</td>
           <td><strong>${log.phone}</strong></td>
-          <td><span class="badge-branch">${log.branch}</span></td>
           <td>฿${log.amount.toLocaleString()}</td>
           <td><strong style="color:var(--bloom-green);">+${log.points} P</strong></td>
           <td>${log.staff}</td>
