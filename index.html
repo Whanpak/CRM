@@ -665,44 +665,6 @@
         </div>
       </div>
 
-      <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-          <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main);">ประวัติการสะสมคะแนนหน้าร้าน (Logs)</h3>
-          
-          <!-- Dropdown กรองสาขาด้านบน & ปุ่ม Export Excel (CSV) -->
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <label style="font-size: 12px; font-weight: 700; color: var(--text-muted);">กรองสาขา:</label>
-              <select id="admin-branch-filter" onchange="renderAdminTables()" style="padding: 6px 12px; border: 1px solid var(--border-light); background: #fafafa; border-radius: var(--radius-sm); font-size: 13px; outline: none;">
-                <option value="">ทุกสาขา</option>
-                <option value="Rama 9 (พระราม 9)">Rama 9 (พระราม 9)</option>
-                <option value="Siam Paragon">Siam Paragon</option>
-                <option value="EmQuartier">EmQuartier</option>
-                <option value="Central World">Central World</option>
-              </select>
-            </div>
-            <button class="btn-export" onclick="exportLogsToCSV()">📥 Export Excel (CSV)</button>
-          </div>
-        </div>
-
-        <div style="overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>วันที่/เวลา</th>
-                <th>เบอร์ลูกค้า</th>
-                <th>ยอดเงิน</th>
-                <th>คะแนนที่ได้รับ</th>
-                <th>สาขา</th>
-                <th>ผู้ลงคะแนน</th>
-                <th style="text-align: center;">ใบเสร็จ</th>
-              </tr>
-            </thead>
-            <tbody id="admin-logs-table"></tbody>
-          </table>
-        </div>
-      </div>
-
     </div>
   </div>
 
@@ -744,7 +706,6 @@
         posLogs.push(docSnap.data());
       });
 
-      // ถ้าใน pos_logs ยังไม่มีข้อมูล ให้ดึงข้อมูลประวัติจาก history ของสมาชิกมาแปลงใส่ logs ชั่วคราวอัตโนมัติ เพื่อให้หน้า Admin มีข้อมูลแสดงผลทันที
       if (posLogs.length === 0 && members.length > 0) {
         members.forEach(m => {
           if (m.history && Array.isArray(m.history)) {
@@ -754,7 +715,7 @@
                   date: h.date || '-',
                   phone: m.phone,
                   branch: h.branch || 'Rama 9 (พระราม 9)',
-                  amount: h.points * 100, // คำนวณกลับจากคะแนนสะสม
+                  amount: h.points * 100,
                   points: h.points,
                   staff: h.staff || '-',
                   receiptImg: h.receiptImg || ''
@@ -1085,64 +1046,6 @@
         </tr>
       `).join('');
     }
-
-    const branchFilter = document.getElementById('admin-branch-filter');
-    const selectedBranch = branchFilter ? branchFilter.value : '';
-    const filteredLogs = selectedBranch ? posLogs.filter(log => log.branch === selectedBranch) : posLogs;
-
-    const tbodyLogs = document.getElementById('admin-logs-table');
-    if (filteredLogs.length === 0) {
-      tbodyLogs.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">ยังไม่มีประวัติการบันทึก</td></tr>';
-    } else {
-      tbodyLogs.innerHTML = filteredLogs.map((log) => `
-        <tr>
-          <td style="font-size:11px; color:var(--text-muted);">${log.date}</td>
-          <td><strong>${log.phone}</strong></td>
-          <td>฿${(log.amount || 0).toLocaleString()}</td>
-          <td><strong style="color:var(--bloom-green);">+${log.points} P</strong></td>
-          <td><span class="badge-branch">${log.branch || '-'}</span></td>
-          <td>${log.staff || '-'}</td>
-          <td style="text-align: center;">
-            ${log.receiptImg ? `<button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="openReceiptModal('${log.receiptImg}')">🖼️ ดูรูป</button>` : '<span style="color:#aaa; font-size:11px;">ไม่มี</span>'}
-          </td>
-        </tr>
-      `).join('');
-    }
-  }
-
-  window.exportLogsToCSV = function() {
-    const branchFilter = document.getElementById('admin-branch-filter');
-    const selectedBranch = branchFilter ? branchFilter.value : '';
-    const filteredLogs = selectedBranch ? posLogs.filter(log => log.branch === selectedBranch) : posLogs;
-
-    if (filteredLogs.length === 0) {
-      alert('ไม่มีข้อมูลสำหรับ Export ในเงื่อนไขนี้');
-      return;
-    }
-
-    let csvContent = "\uFEFF";
-    csvContent += "วันที่/เวลา,เบอร์ลูกค้า,ยอดเงิน (บาท),คะแนนที่ได้รับ,สาขา,ผู้ลงคะแนน\r\n";
-
-    filteredLogs.forEach(log => {
-      const row = [
-        `"${log.date}"`,
-        `"${log.phone}"`,
-        log.amount || 0,
-        log.points,
-        `"${log.branch || ''}"`,
-        `"${log.staff || ''}"`
-      ];
-      csvContent += row.join(",") + "\r\n";
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `bloom_transaction_logs_${selectedBranch ? selectedBranch.replace(/[^a-zA-Z0-9]/g, '_') : 'all_branches'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
 
   window.deleteMember = async function(phone) {
@@ -1159,7 +1062,6 @@
     }
   }
 
-  // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
   loadDataFromFirebase();
 
   window.addEventListener('DOMContentLoaded', () => {
