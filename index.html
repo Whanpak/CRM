@@ -384,8 +384,8 @@
   </div>
   <div class="sidebar-menu">
     <button id="tab-cust" onclick="switchMainTab('cust')">👤 ฝั่งลูกค้า</button>
-    <button id="tab-pos" class="active" onclick="switchMainTab('pos')">📱 POS หน้าร้าน</button>
-    <button id="tab-admin" onclick="switchMainTab('admin')">📊 Admin Dashboard</button>
+    <button id="tab-pos" onclick="switchMainTab('pos')">📱 POS หน้าร้าน</button>
+    <button id="tab-admin" class="active" onclick="switchMainTab('admin')">📊 Admin Dashboard</button>
   </div>
 </aside>
 
@@ -578,7 +578,7 @@
   </div>
 
   <!-- ==================== หน้าที่ 2: POS หน้าร้าน (/frontstore) ==================== -->
-  <div id="page-pos" class="page active">
+  <div id="page-pos" class="page">
     <div class="container">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">📱 POS หน้าร้าน (สะสมคะแนน)</h2>
       <div class="card">
@@ -643,7 +643,7 @@
   </div>
 
   <!-- ==================== หน้าที่ 3: Admin Dashboard (/admin) ==================== -->
-  <div id="page-admin" class="page">
+  <div id="page-admin" class="page active">
     <div class="container-wide">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">📊 Admin Dashboard & Transaction Logs</h2>
       
@@ -744,6 +744,27 @@
         posLogs.push(docSnap.data());
       });
 
+      // ถ้าใน pos_logs ยังไม่มีข้อมูล ให้ดึงข้อมูลประวัติจาก history ของสมาชิกมาแปลงใส่ logs ชั่วคราวอัตโนมัติ เพื่อให้หน้า Admin มีข้อมูลแสดงผลทันที
+      if (posLogs.length === 0 && members.length > 0) {
+        members.forEach(m => {
+          if (m.history && Array.isArray(m.history)) {
+            m.history.forEach(h => {
+              if (h.points > 0) {
+                posLogs.push({
+                  date: h.date || '-',
+                  phone: m.phone,
+                  branch: h.branch || 'Rama 9 (พระราม 9)',
+                  amount: h.points * 100, // คำนวณกลับจากคะแนนสะสม
+                  points: h.points,
+                  staff: h.staff || '-',
+                  receiptImg: h.receiptImg || ''
+                });
+              }
+            });
+          }
+        });
+      }
+
       renderAdminTables();
       const phoneInput = document.getElementById('pos-phone');
       if (phoneInput && phoneInput.value) {
@@ -754,7 +775,6 @@
     }
   }
 
-  // ผูกฟังก์ชันทั้งหมดไว้ที่ window เพื่อให้ปุ่มกดเรียกใช้ได้จริง
   window.switchMainTab = function(tabName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
@@ -996,7 +1016,8 @@
       title: `สะสมคะแนน (${amount} บาท)`,
       points: pointsEarned,
       branch: branch,
-      staff: staff
+      staff: staff,
+      receiptImg: currentReceiptBase64 || ""
     };
     member.history.unshift(historyItem);
 
@@ -1077,10 +1098,10 @@
         <tr>
           <td style="font-size:11px; color:var(--text-muted);">${log.date}</td>
           <td><strong>${log.phone}</strong></td>
-          <td>฿${log.amount.toLocaleString()}</td>
+          <td>฿${(log.amount || 0).toLocaleString()}</td>
           <td><strong style="color:var(--bloom-green);">+${log.points} P</strong></td>
           <td><span class="badge-branch">${log.branch || '-'}</span></td>
-          <td>${log.staff}</td>
+          <td>${log.staff || '-'}</td>
           <td style="text-align: center;">
             ${log.receiptImg ? `<button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="openReceiptModal('${log.receiptImg}')">🖼️ ดูรูป</button>` : '<span style="color:#aaa; font-size:11px;">ไม่มี</span>'}
           </td>
@@ -1106,7 +1127,7 @@
       const row = [
         `"${log.date}"`,
         `"${log.phone}"`,
-        log.amount,
+        log.amount || 0,
         log.points,
         `"${log.branch || ''}"`,
         `"${log.staff || ''}"`
@@ -1138,24 +1159,11 @@
     }
   }
 
-  // เรียกโหลดข้อมูลทันทีเมื่อโหลดสคริปต์เสร็จ
+  // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
   loadDataFromFirebase();
 
   window.addEventListener('DOMContentLoaded', () => {
-    const hash = window.location.hash.replace('/', '').replace('#', '');
-    if (hash === 'customer' || hash === 'cust') {
-      switchMainTab('cust');
-    } else if (hash === 'admin') {
-      switchMainTab('admin');
-    } else {
-      switchMainTab('pos');
-    }
-
-    const posPhone = document.getElementById('pos-phone');
-    const posAmount = document.getElementById('pos-amount');
-    if (posPhone) posPhone.value = '0953353447';
-    if (posAmount) posAmount.value = '500';
-    calcPointsLive(500);
+    switchMainTab('admin');
   });
 </script>
 
