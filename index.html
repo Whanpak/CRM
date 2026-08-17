@@ -51,9 +51,10 @@
       padding: 16px 12px;
       gap: 6px;
       flex: 1;
+      overflow-y: auto;
     }
 
-    .sidebar-menu button {
+    .sidebar-menu button, .sidebar-menu .sidebar-dropdown-toggle {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -70,8 +71,27 @@
       text-decoration: none;
     }
 
-    .sidebar-menu button:hover { background: #f0f2ef; color: var(--bloom-green); }
+    .sidebar-menu button:hover, .sidebar-menu .sidebar-dropdown-toggle:hover { background: #f0f2ef; color: var(--bloom-green); }
     .sidebar-menu button.active { background: var(--bloom-green); color: #ffffff; }
+
+    /* Sidebar Dropdown Styling */
+    .sidebar-dropdown { display: flex; flex-direction: column; }
+    .sidebar-dropdown-menu {
+      display: none;
+      flex-direction: column;
+      padding-left: 12px;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .sidebar-dropdown-menu button {
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .sidebar-dropdown-menu button.active {
+      background: #eef2ed;
+      color: var(--bloom-green-dark);
+      font-weight: 700;
+    }
 
     /* Main Content Layout */
     main.main-content {
@@ -386,7 +406,19 @@
   <div class="sidebar-menu">
     <button id="tab-cust" onclick="switchMainTab('cust')">👤 ฝั่งลูกค้า</button>
     <button id="tab-pos" onclick="switchMainTab('pos')">📱 POS หน้าร้าน</button>
-    <button id="tab-admin" onclick="switchMainTab('admin')">📊 Admin Dashboard</button>
+    
+    <!-- Admin Dropdown Menu -->
+    <div class="sidebar-dropdown">
+      <button class="sidebar-dropdown-toggle" id="btn-admin-toggle" onclick="toggleAdminDropdown(event)">
+        <span>📊 ระบบแอดมิน</span>
+        <span id="admin-arrow" style="margin-left: auto;">▼</span>
+      </button>
+      <div class="sidebar-dropdown-menu" id="admin-dropdown-menu">
+        <button id="tab-admin" onclick="switchMainTab('admin')">🎁 การจัดการรางวัล</button>
+        <button id="tab-admin-coupons" onclick="switchMainTab('admin-coupons')">🏷️ การจัดการคูปอง</button>
+      </div>
+    </div>
+
     <button id="tab-members" class="active" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
   </div>
 </aside>
@@ -479,23 +511,8 @@
         <!-- Sub Page 3: คูปอง -->
         <div id="subtab-coupons" class="cust-subpage" style="display: none;">
           <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">คูปองของฉัน</h3>
-
-          <div class="coupon-ticket" onclick="openCouponModal('BLOOM PRETZEL', 'ส่วนลด 20 บาท', 'ใช้เป็นส่วนลดเมื่อซื้อ Pretzel หรือ Coffee ครบ 120 บาท')">
-            <div class="coupon-left">🥨</div>
-            <div class="coupon-right">
-              <div class="coupon-brand">WELCOME MEMBER</div>
-              <div class="coupon-title">ส่วนลด 20 บาท</div>
-              <div class="coupon-expiry">หมดอายุ 30 ก.ย. 2026</div>
-            </div>
-          </div>
-
-          <div class="coupon-ticket" onclick="openCouponModal('BLOOM COFFEE', 'Free Size Upgrade', 'อัปเกรดขนาดเครื่องดื่มฟรี 1 ระดับ')">
-            <div class="coupon-left">☕</div>
-            <div class="coupon-right">
-              <div class="coupon-brand">SPECIAL OFFER</div>
-              <div class="coupon-title">Free Size Upgrade</div>
-              <div class="coupon-expiry">หมดอายุ 15 ต.ค. 2026</div>
-            </div>
+          <div id="customer-coupons-list">
+            <!-- Dynamic Customer Coupons Rendered Here -->
           </div>
         </div>
 
@@ -542,7 +559,7 @@
       <div id="m-desc" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;"></div>
       <div style="padding-top: 16px; border-top: 1px dashed var(--border-light);">
         <div style="width: 75%; height: 40px; background: repeating-linear-gradient(90deg, #333 0, #333 2px, #fff 2px, #fff 4px); margin: 8px auto;"></div>
-        <div style="font-size: 10px; color: var(--text-muted); font-family: monospace; letter-spacing: 1px;">BLM-88392019203</div>
+        <div style="font-size: 10px; color: var(--text-muted); font-family: monospace; letter-spacing: 1px;" id="m-code">BLM-88392019203</div>
       </div>
     </div>
   </div>
@@ -639,14 +656,14 @@
     </div>
   </div>
 
-  <!-- ==================== หน้าที่ 3: Admin Dashboard (/admin) ==================== -->
+  <!-- ==================== หน้าที่ 3: Admin - การจัดการรางวัล (/admin) ==================== -->
   <div id="page-admin" class="page">
     <div class="container-wide">
-      <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">📊 Admin Dashboard & Management</h2>
+      <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">🎁 การจัดการรางวัล (Redeem Items)</h2>
       
       <!-- ส่วนจัดการรายการของรางวัล (Redeem Items) -->
       <div class="card" style="margin-bottom: 24px;">
-        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">🎁 จัดการรายการของรางวัล (Redeem Items)</h3>
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">เพิ่ม / จัดการรายการของรางวัล</h3>
         
         <!-- ฟอร์มเพิ่มของรางวัล -->
         <form onsubmit="handleAddReward(event)" style="background: #fafafa; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 16px;">
@@ -701,6 +718,62 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ==================== หน้าที่ 3.2: Admin - การจัดการคูปอง (/admin-coupons) ==================== -->
+  <div id="page-admin-coupons" class="page">
+    <div class="container-wide">
+      <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">🏷️ การจัดการคูปอง (Coupons Management)</h2>
+      
+      <div class="card" style="margin-bottom: 24px;">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">สร้างคูปองส่วนลดใหม่</h3>
+        
+        <form onsubmit="handleAddCoupon(event)" style="background: #fafafa; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 16px;">
+          <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>ไอคอน / อีโมจิ</label>
+              <input type="text" id="coup-icon" placeholder="🥨 หรือ ☕" value="🥨" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>แบรนด์ / หมวดหมู่คูปอง</label>
+              <input type="text" id="coup-brand" placeholder="WELCOME MEMBER" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>วันหมดอายุ</label>
+              <input type="text" id="coup-expiry" placeholder="30 ก.ย. 2026" required>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 10px; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>ชื่อหัวข้อคูปอง</label>
+              <input type="text" id="coup-title" placeholder="ส่วนลด 20 บาท" required>
+            </div>
+            <div>
+              <button type="submit" class="btn" style="height: 42px;">สร้างคูปอง</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
+            <label>รายละเอียดเงื่อนไขคูปอง</label>
+            <input type="text" id="coup-desc" placeholder="ใช้เป็นส่วนลดเมื่อซื้อ Pretzel หรือ Coffee ครบ 120 บาท" required>
+          </div>
+        </form>
+
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 60px; text-align: center;">ไอคอน</th>
+                <th>แบรนด์</th>
+                <th>ชื่อคูปอง / รายละเอียด</th>
+                <th>หมดอายุ</th>
+                <th style="text-align: center;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="admin-coupons-table"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -767,6 +840,10 @@
     { id: 'rew_1', icon: '🥨', title: 'Soft Pretzel Original', desc: 'พรีเซิลอบสดใหม่ signature', cost: 120 },
     { id: 'rew_2', icon: '☕', title: 'Iced Latte / Americano', desc: 'กาแฟสกัดสด 1 แก้ว', cost: 100 }
   ];
+  let coupons = [
+    { id: 'coup_1', icon: '🥨', brand: 'WELCOME MEMBER', title: 'ส่วนลด 20 บาท', desc: 'ใช้เป็นส่วนลดเมื่อซื้อ Pretzel หรือ Coffee ครบ 120 บาท', expiry: '30 ก.ย. 2026', code: 'BLM-88392019203' },
+    { id: 'coup_2', icon: '☕', brand: 'SPECIAL OFFER', title: 'Free Size Upgrade', desc: 'อัปเกรดขนาดเครื่องดื่มฟรี 1 ระดับ', expiry: '15 ต.ค. 2026', code: 'BLM-99482011384' }
+  ];
   let currentLoggedInMember = null;
   let currentReceiptBase64 = null;
   let currentRewardIconBase64 = '🥨';
@@ -823,8 +900,17 @@
         });
       }
 
+      const couponSnapshot = await getDocs(collection(db, "coupons"));
+      if (!couponSnapshot.empty) {
+        coupons = [];
+        couponSnapshot.forEach((docSnap) => {
+          coupons.push({ id: docSnap.id, ...docSnap.data() });
+        });
+      }
+
       renderAdminTables();
       renderCustomerRewards();
+      renderCustomerCoupons();
       
       const phoneInput = document.getElementById('pos-phone');
       if (phoneInput && phoneInput.value) {
@@ -835,15 +921,47 @@
     }
   }
 
+  window.toggleAdminDropdown = function(e) {
+    e.stopPropagation();
+    const dropdownMenu = document.getElementById('admin-dropdown-menu');
+    const arrow = document.getElementById('admin-arrow');
+    if (dropdownMenu.style.display === 'flex') {
+      dropdownMenu.style.display = 'none';
+      arrow.innerText = '▼';
+    } else {
+      dropdownMenu.style.display = 'flex';
+      arrow.innerText = '▲';
+    }
+  }
+
   window.switchMainTab = function(tabName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.sidebar-menu button').forEach(b => {
+      if (!b.classList.contains('sidebar-dropdown-toggle')) {
+        b.classList.remove('active');
+      }
+    });
 
     const targetPage = document.getElementById(`page-${tabName}`);
     if (targetPage) targetPage.classList.add('active');
 
     const targetTab = document.getElementById(`tab-${tabName}`);
-    if (targetTab) targetTab.classList.add('active');
+    if (targetTab) {
+      targetTab.classList.add('active');
+    }
+
+    // ถ้ากดเลือกเมนูย่อยของแอดมิน ให้ไฮไลต์ปุ่ม Toggle แม่ด้วย
+    const adminToggle = document.getElementById('btn-admin-toggle');
+    const adminDropdownMenu = document.getElementById('admin-dropdown-menu');
+    if (tabName === 'admin' || tabName === 'admin-coupons') {
+      if (adminToggle) adminToggle.style.color = 'var(--bloom-green)';
+      if (adminDropdownMenu) adminDropdownMenu.style.display = 'flex';
+      document.getElementById('admin-arrow').innerText = '▲';
+    } else {
+      if (adminToggle) adminToggle.style.color = '';
+      if (adminDropdownMenu) adminDropdownMenu.style.display = 'none';
+      document.getElementById('admin-arrow').innerText = '▼';
+    }
 
     const bnav = document.getElementById('customer-bottom-nav');
     if (tabName === 'cust' && currentLoggedInMember) {
@@ -852,8 +970,11 @@
       bnav.style.display = 'none';
     }
 
-    if (tabName === 'admin' || tabName === 'members') renderAdminTables();
-    if (tabName === 'cust') renderCustomerRewards();
+    if (tabName === 'admin' || tabName === 'admin-coupons' || tabName === 'members') renderAdminTables();
+    if (tabName === 'cust') {
+      renderCustomerRewards();
+      renderCustomerCoupons();
+    }
     window.location.hash = '/' + tabName;
   }
 
@@ -869,6 +990,8 @@
 
     if (subTabName === 'redeem') {
       renderCustomerRewards();
+    } else if (subTabName === 'coupons') {
+      renderCustomerCoupons();
     }
   }
 
@@ -1007,6 +1130,7 @@
     `).join('');
 
     document.getElementById('cust-history-list').innerHTML = historyHtml || '<p style="color:var(--text-muted); font-size:13px; text-align:center;">ยังไม่มีประวัติการทำรายการ</p>';
+    renderCustomerCoupons();
     switchCustSubTab('home');
   }
 
@@ -1036,6 +1160,27 @@
         </div>
       `;
     }).join('');
+  }
+
+  window.renderCustomerCoupons = function() {
+    const couponsListEl = document.getElementById('customer-coupons-list');
+    if (!couponsListEl) return;
+
+    if (coupons.length === 0) {
+      couponsListEl.innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center;">ยังไม่มีคูปองส่วนลดในระบบ</p>';
+      return;
+    }
+
+    couponsListEl.innerHTML = coupons.map(c => `
+      <div class="coupon-ticket" onclick="openCouponModal('${c.brand.replace(/'/g, "\\'")}', '${c.title.replace(/'/g, "\\'")}', '${c.desc.replace(/'/g, "\\'")}', '${c.code || 'BLM-88392019203'}')">
+        <div class="coupon-left">${c.icon || '🥨'}</div>
+        <div class="coupon-right">
+          <div class="coupon-brand">${c.brand}</div>
+          <div class="coupon-title">${c.title}</div>
+          <div class="coupon-expiry">หมดอายุ ${c.expiry}</div>
+        </div>
+      </div>
+    `).join('');
   }
 
   window.handleLogout = function() {
@@ -1142,10 +1287,11 @@
     }
   }
 
-  window.openCouponModal = function(brand, title, desc) {
+  window.openCouponModal = function(brand, title, desc, code) {
     document.getElementById('m-brand').innerText = brand;
     document.getElementById('m-title').innerText = title;
     document.getElementById('m-desc').innerText = desc;
+    document.getElementById('m-code').innerText = code || 'BLM-88392019203';
     document.getElementById('coupon-modal').style.display = 'flex';
   }
   window.closeCouponModal = function(e) { if (e.target.id === 'coupon-modal') document.getElementById('coupon-modal').style.display = 'none'; }
@@ -1246,6 +1392,29 @@
       }
     }
 
+    // Render Coupons Table
+    const tbodyCoupon = document.getElementById('admin-coupons-table');
+    if (tbodyCoupon) {
+      if (coupons.length === 0) {
+        tbodyCoupon.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ยังไม่มีรายการคูปองส่วนลด</td></tr>';
+      } else {
+        tbodyCoupon.innerHTML = coupons.map((c) => `
+          <tr>
+            <td style="text-align: center; font-size: 20px;">${c.icon || '🥨'}</td>
+            <td><strong>${c.brand}</strong></td>
+            <td>
+              <div><strong>${c.title}</strong></div>
+              <div style="font-size: 11px; color: var(--text-muted);">${c.desc}</div>
+            </td>
+            <td>${c.expiry}</td>
+            <td style="text-align: center;">
+              <button class="btn-delete" onclick="deleteCoupon('${c.id}')">ลบ</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
     // Render Members Table with Search Filter & Clickable Row
     const searchInput = document.getElementById('member-search-input');
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -1298,7 +1467,7 @@
       renderCustomerRewards();
     } catch (error) {
       console.error("Error adding reward: ", error);
-      alert('เกิดข้อผิดพลาดในการบันทึกของรางวัล (ไฟล์รูปใหญเกินไป กรุณาลองเลือกรูปขนาดเล็กลง)');
+      alert('เกิดข้อผิดพลาดในการบันทึกของรางวัล (ไฟล์รูปใหญ่เกินไป กรุณาลองเลือกรูปขนาดเล็กลง)');
     }
   }
 
@@ -1312,6 +1481,48 @@
         alert('ลบของรางวัลสำเร็จ');
       } catch (error) {
         console.error("Error deleting reward: ", error);
+        alert('เกิดข้อผิดพลาดในการลบ');
+      }
+    }
+  }
+
+  window.handleAddCoupon = async function(e) {
+    e.preventDefault();
+    const icon = document.getElementById('coup-icon').value.trim() || '🥨';
+    const brand = document.getElementById('coup-brand').value.trim();
+    const title = document.getElementById('coup-title').value.trim();
+    const desc = document.getElementById('coup-desc').value.trim();
+    const expiry = document.getElementById('coup-expiry').value.trim();
+    const code = 'BLM-' + Math.floor(10000000000 + Math.random() * 90000000000);
+
+    const newId = 'coup_' + Date.now();
+    const newCoupon = { id: newId, icon, brand, title, desc, expiry, code };
+
+    try {
+      await setDoc(doc(db, "coupons", newId), newCoupon);
+      coupons.push(newCoupon);
+      alert('สร้างคูปองส่วนลดสำเร็จ!');
+      e.target.reset();
+      document.getElementById('coup-icon').value = '🥨';
+
+      renderAdminTables();
+      renderCustomerCoupons();
+    } catch (error) {
+      console.error("Error adding coupon: ", error);
+      alert('เกิดข้อผิดพลาดในการสร้างคูปอง');
+    }
+  }
+
+  window.deleteCoupon = async function(couponId) {
+    if (confirm('ยืนยันลบคูปองส่วนลดนี้?')) {
+      try {
+        await deleteDoc(doc(db, "coupons", couponId));
+        coupons = coupons.filter(c => c.id !== couponId);
+        renderAdminTables();
+        renderCustomerCoupons();
+        alert('ลบคูปองสำเร็จ');
+      } catch (error) {
+        console.error("Error deleting coupon: ", error);
         alert('เกิดข้อผิดพลาดในการลบ');
       }
     }
