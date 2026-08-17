@@ -67,6 +67,7 @@
       font-weight: 600;
       cursor: pointer;
       text-align: left;
+      text-decoration: none;
     }
 
     .sidebar-menu button:hover { background: #f0f2ef; color: var(--bloom-green); }
@@ -375,7 +376,7 @@
 <!-- Main Content -->
 <main class="main-content">
 
-  <!-- ==================== หน้าฝั่งลูกค้า ==================== -->
+  <!-- ==================== หน้าฝั่งลูกค้า (/customer) ==================== -->
   <div id="page-cust" class="page">
     <div class="container">
       
@@ -560,7 +561,7 @@
     </div>
   </div>
 
-  <!-- ==================== หน้าที่ 2: POS หน้าร้าน (โชว์คะแนนแบบ Real-time) ==================== -->
+  <!-- ==================== หน้าที่ 2: POS หน้าร้าน (/frontstore) ==================== -->
   <div id="page-pos" class="page active">
     <div class="container">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">📱 POS หน้าร้าน (สะสมคะแนน)</h2>
@@ -625,7 +626,7 @@
     </div>
   </div>
 
-  <!-- ==================== หน้าที่ 3: Admin Dashboard ==================== -->
+  <!-- ==================== หน้าที่ 3: Admin Dashboard (/admin) ==================== -->
   <div id="page-admin" class="page">
     <div class="container-wide">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">📊 Admin Dashboard & Transaction Logs</h2>
@@ -675,7 +676,7 @@
 
 <script>
   let members = JSON.parse(localStorage.getItem('bloom_crm_members')) || [
-    { name: 'lll', phone: '0953353447', dob: '1998-08-17', points: 0, history: [] } // ข้อมูลตัวอย่างจากหน้าจอ
+    { name: 'lll', phone: '0953353447', dob: '1998-08-17', points: 0, history: [] }
   ];
   let posLogs = JSON.parse(localStorage.getItem('bloom_crm_pos_logs')) || [];
   let currentLoggedInMember = null;
@@ -698,6 +699,9 @@
     }
 
     if (tabName === 'admin') renderAdminTables();
+    
+    // อัปเดต URL Hash เสมือนระบบ Routing ย่อย
+    window.location.hash = '/' + tabName;
   }
 
   function switchCustSubTab(subTabName) {
@@ -1012,8 +1016,17 @@
     }
   }
 
-  // โหลดหน้าจอพร้อมค้นข้อมูลตัวอย่างเบอร์ 0953353447
+  // โหลดหน้าจอตาม Hash (เช่น /customer, /frontstore, /admin) หรือค่าเริ่มต้น
   window.onload = function() {
+    const hash = window.location.hash.replace('/', '').replace('#', '');
+    if (hash === 'customer' || hash === 'cust') {
+      switchMainTab('cust');
+    } else if (hash === 'admin') {
+      switchMainTab('admin');
+    } else {
+      switchMainTab('pos');
+    }
+
     document.getElementById('pos-phone').value = '0953353447';
     searchCustomerLive('0953353447');
     document.getElementById('pos-amount').value = '500';
