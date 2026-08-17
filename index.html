@@ -386,8 +386,8 @@
   <div class="sidebar-menu">
     <button id="tab-cust" onclick="switchMainTab('cust')">👤 ฝั่งลูกค้า</button>
     <button id="tab-pos" onclick="switchMainTab('pos')">📱 POS หน้าร้าน</button>
-    <button id="tab-admin" class="active" onclick="switchMainTab('admin')">📊 Admin Dashboard</button>
-    <button id="tab-members" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
+    <button id="tab-admin" onclick="switchMainTab('admin')">📊 Admin Dashboard</button>
+    <button id="tab-members" class="active" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
   </div>
 </aside>
 
@@ -640,7 +640,7 @@
   </div>
 
   <!-- ==================== หน้าที่ 3: Admin Dashboard (/admin) ==================== -->
-  <div id="page-admin" class="page active">
+  <div id="page-admin" class="page">
     <div class="container-wide">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">📊 Admin Dashboard & Management</h2>
       
@@ -705,9 +705,14 @@
   </div>
 
   <!-- ==================== หน้าที่ 4: ฐานข้อมูลสมาชิก (/members) ==================== -->
-  <div id="page-members" class="page">
+  <div id="page-members" class="page active">
     <div class="container-wide">
-      <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">👥 ฐานข้อมูลสมาชิก (Customer Database)</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--bloom-green); margin: 0;">👥 ฐานข้อมูลสมาชิก (Customer Database)</h2>
+        <button class="btn" onclick="exportMembersToCSV()" style="width: auto; padding: 10px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+          📥 Export รายชื่อ (CSV/Excel)
+        </button>
+      </div>
       
       <!-- ส่วนจัดการรายชื่อสมาชิก -->
       <div class="card" style="margin-bottom: 24px;">
@@ -1072,7 +1077,6 @@
   window.previewReceipt = async function(event) {
     const file = event.target.files[0];
     if (file) {
-      // บีบอัดรูปใบเสร็จด้วย
       const compressedDataUrl = await compressImage(file, 800, 800, 0.7);
       currentReceiptBase64 = compressedDataUrl;
       const imgEl = document.getElementById('receipt-preview-img');
@@ -1085,7 +1089,6 @@
   window.previewRewardIcon = async function(event) {
     const file = event.target.files[0];
     if (file) {
-      // ย่อขนาดไอคอนของรางวัลให้เหลือขนาดเล็กพอดี (150x150px) เพื่อไม่ให้ไฟล์ใหญ่เกินไป
       const compressedDataUrl = await compressImage(file, 150, 150, 0.7);
       currentRewardIconBase64 = compressedDataUrl;
       const imgEl = document.getElementById('rew-icon-img');
@@ -1190,27 +1193,57 @@
     document.getElementById('admin-member-history-modal').style.display = 'none';
   }
 
+  // ฟังก์ชัน Export รายชื่อสมาชิกเป็นไฟล์ CSV (เปิดใน Excel ได้ถูกต้อง รองรับภาษาไทย UTF-8)
+  window.exportMembersToCSV = function() {
+    if (members.length === 0) {
+      alert("ไม่มีข้อมูลสมาชิกสำหรับ Export");
+      return;
+    }
+
+    let csvContent = "\uFEFF"; // BOM สำหรับรองรับภาษาไทยใน Excel
+    csvContent += "เบอร์โทรศัพท์,ชื่อ-นามสกุล,วันเกิด,คะแนนสะสม\n";
+
+    members.forEach(m => {
+      const phone = `"${m.phone || ''}"`;
+      const name = `"${(m.name || '').replace(/"/g, '""')}"`;
+      const dob = `"${m.dob || ''}"`;
+      const points = m.points || 0;
+      csvContent += `${phone},${name},${dob},${points}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `bloom_members_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   window.renderAdminTables = function() {
     // Render Rewards Table
     const tbodyReward = document.getElementById('admin-rewards-table');
-    if (rewards.length === 0) {
-      tbodyReward.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ยังไม่มีรายการของรางวัล</td></tr>';
-    } else {
-      tbodyReward.innerHTML = rewards.map((r) => {
-        const isImg = r.icon && (r.icon.startsWith('data:image') || r.icon.startsWith('http'));
-        const iconDisplay = isImg ? `<img src="${r.icon}" style="width:28px; height:28px; object-fit:cover; border-radius:4px;" alt="icon">` : (r.icon || '🎁');
-        return `
-          <tr>
-            <td style="text-align: center; font-size: 20px;">${iconDisplay}</td>
-            <td><strong>${r.title}</strong></td>
-            <td>${r.desc || '-'}</td>
-            <td><strong>${r.cost} P</strong></td>
-            <td style="text-align: center;">
-              <button class="btn-delete" onclick="deleteReward('${r.id}')">ลบ</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+    if (tbodyReward) {
+      if (rewards.length === 0) {
+        tbodyReward.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ยังไม่มีรายการของรางวัล</td></tr>';
+      } else {
+        tbodyReward.innerHTML = rewards.map((r) => {
+          const isImg = r.icon && (r.icon.startsWith('data:image') || r.icon.startsWith('http'));
+          const iconDisplay = isImg ? `<img src="${r.icon}" style="width:28px; height:28px; object-fit:cover; border-radius:4px;" alt="icon">` : (r.icon || '🎁');
+          return `
+            <tr>
+              <td style="text-align: center; font-size: 20px;">${iconDisplay}</td>
+              <td><strong>${r.title}</strong></td>
+              <td>${r.desc || '-'}</td>
+              <td><strong>${r.cost} P</strong></td>
+              <td style="text-align: center;">
+                <button class="btn-delete" onclick="deleteReward('${r.id}')">ลบ</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
     }
 
     // Render Members Table with Search Filter & Clickable Row
@@ -1222,20 +1255,22 @@
     );
 
     const tbodyMember = document.getElementById('admin-member-table');
-    if (filteredMembers.length === 0) {
-      tbodyMember.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ไม่พบข้อมูลสมาชิกที่ค้นหา</td></tr>';
-    } else {
-      tbodyMember.innerHTML = filteredMembers.map((m) => `
-        <tr class="member-row" onclick="openAdminMemberHistory('${m.phone}')">
-          <td><strong>${m.phone}</strong></td>
-          <td>${m.name}</td>
-          <td>${m.dob || '-'}</td>
-          <td><strong>${m.points} P</strong></td>
-          <td style="text-align: center;" onclick="event.stopPropagation()">
-            <button class="btn-delete" onclick="deleteMember('${m.phone}')">ลบ</button>
-          </td>
-        </tr>
-      `).join('');
+    if (tbodyMember) {
+      if (filteredMembers.length === 0) {
+        tbodyMember.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ไม่พบข้อมูลสมาชิกที่ค้นหา</td></tr>';
+      } else {
+        tbodyMember.innerHTML = filteredMembers.map((m) => `
+          <tr class="member-row" onclick="openAdminMemberHistory('${m.phone}')">
+            <td><strong>${m.phone}</strong></td>
+            <td>${m.name}</td>
+            <td>${m.dob || '-'}</td>
+            <td><strong>${m.points} P</strong></td>
+            <td style="text-align: center;" onclick="event.stopPropagation()">
+              <button class="btn-delete" onclick="deleteMember('${m.phone}')">ลบ</button>
+            </td>
+          </tr>
+        `).join('');
+      }
     }
   }
 
@@ -1255,7 +1290,6 @@
       alert('เพิ่มของรางวัลสำเร็จ!');
       e.target.reset();
       
-      // Reset Icon preview state
       currentRewardIconBase64 = '🥨';
       document.getElementById('rew-icon-img').style.display = 'none';
       document.getElementById('rew-icon-placeholder').style.display = 'block';
@@ -1300,7 +1334,7 @@
   loadDataFromFirebase();
 
   window.addEventListener('DOMContentLoaded', () => {
-    switchMainTab('admin');
+    switchMainTab('members');
   });
 </script>
 
