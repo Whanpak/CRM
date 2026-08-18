@@ -267,19 +267,6 @@
     }
     .btn-delete:hover { background: #fff5f5; }
 
-    .btn-edit {
-      background: transparent;
-      color: #d69e2e;
-      border: 1px solid #f6e05e;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      margin-right: 4px;
-    }
-    .btn-edit:hover { background: #fffaf0; }
-
     .link-toggle { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--bloom-green); cursor: pointer; font-weight: 600; }
 
     /* Redeem Grid Items */
@@ -430,7 +417,7 @@
       </div>
     </div>
 
-    <button id="tab-members" class="active" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
+    <button id="tab-members" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
   </div>
 </aside>
 
@@ -655,10 +642,9 @@
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">🎁 การจัดการรางวัล (Redeem Items)</h2>
       
       <div class="card" style="margin-bottom: 24px;">
-        <h3 id="reward-form-title" style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">เพิ่ม / จัดการรายการของรางวัล</h3>
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">เพิ่ม / จัดการรายการของรางวัล</h3>
         
-        <form onsubmit="handleSaveReward(event)" style="background: #fafafa; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 16px;">
-          <input type="hidden" id="edit-reward-id" value="">
+        <form onsubmit="handleAddReward(event)" style="background: #fafafa; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 16px;">
           <div style="display: grid; grid-template-columns: 2fr 3fr 1.5fr 1fr; gap: 10px; align-items: flex-end;">
             
             <div class="form-group" style="margin-bottom: 0;">
@@ -683,9 +669,8 @@
               <label>ใช้คะแนน (POINTS)</label>
               <input type="number" id="rew-cost" placeholder="120" min="1" required>
             </div>
-            <div style="display: flex; gap: 4px;">
-              <button type="submit" id="reward-submit-btn" class="btn" style="height: 42px; flex: 1;">เพิ่ม</button>
-              <button type="button" id="reward-cancel-btn" class="btn btn-secondary" style="height: 42px; display: none;" onclick="resetRewardForm()">ยกเลิก</button>
+            <div>
+              <button type="submit" class="btn" style="height: 42px;">เพิ่ม</button>
             </div>
           </div>
           <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
@@ -768,7 +753,7 @@
     </div>
   </div>
 
-  <div id="page-members" class="page active">
+  <div id="page-members" class="page">
     <div class="container-wide">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="font-size: 18px; font-weight: 700; color: var(--bloom-green); margin: 0;">👥 ฐานข้อมูลสมาชิก (Customer Database)</h2>
@@ -937,6 +922,7 @@
       targetTab.classList.add('active');
     }
 
+    // ถ้ากดเลือกเมนูย่อยของแอดมิน ให้ไฮไลต์ปุ่ม Toggle แม่ด้วย
     const adminToggle = document.getElementById('btn-admin-toggle');
     const adminDropdownMenu = document.getElementById('admin-dropdown-menu');
     if (tabName === 'admin' || tabName === 'admin-coupons') {
@@ -1290,6 +1276,7 @@
   window.closeReceiptModal = function(e) { if (e.target.id === 'receipt-modal') document.getElementById('receipt-modal').style.display = 'none'; }
   window.closeReceiptModalDirect = function() { document.getElementById('receipt-modal').style.display = 'none'; }
 
+  // Admin View Member History Modal
   window.openAdminMemberHistory = function(phone) {
     const member = members.find(m => m.phone === phone);
     if (!member) return;
@@ -1324,13 +1311,14 @@
     document.getElementById('admin-member-history-modal').style.display = 'none';
   }
 
+  // ฟังก์ชัน Export รายชื่อสมาชิกเป็นไฟล์ CSV (เปิดใน Excel ได้ถูกต้อง รองรับภาษาไทย UTF-8)
   window.exportMembersToCSV = function() {
     if (members.length === 0) {
       alert("ไม่มีข้อมูลสมาชิกสำหรับ Export");
       return;
     }
 
-    let csvContent = "\uFEFF";
+    let csvContent = "\uFEFF"; // BOM สำหรับรองรับภาษาไทยใน Excel
     csvContent += "เบอร์โทรศัพท์,ชื่อ-นามสกุล,วันเกิด,คะแนนสะสม\n";
 
     members.forEach(m => {
@@ -1352,6 +1340,7 @@
   }
 
   window.renderAdminTables = function() {
+    // Render Rewards Table
     const tbodyReward = document.getElementById('admin-rewards-table');
     if (tbodyReward) {
       if (rewards.length === 0) {
@@ -1367,7 +1356,6 @@
               <td>${r.desc || '-'}</td>
               <td><strong>${r.cost} P</strong></td>
               <td style="text-align: center;">
-                <button class="btn-edit" onclick="prepareEditReward('${r.id}')">แก้ไข</button>
                 <button class="btn-delete" onclick="deleteReward('${r.id}')">ลบ</button>
               </td>
             </tr>
@@ -1376,6 +1364,7 @@
       }
     }
 
+    // Render Coupons Table
     const tbodyCoupon = document.getElementById('admin-coupons-table');
     if (tbodyCoupon) {
       if (coupons.length === 0) {
@@ -1398,6 +1387,7 @@
       }
     }
 
+    // Render Members Table with Search Filter & Clickable Row
     const searchInput = document.getElementById('member-search-input');
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
@@ -1425,97 +1415,31 @@
     }
   }
 
-  // ฟังก์ชันดึงข้อมูลของรางวัลมาใส่ฟอร์มเพื่อเตรียมแก้ไข
-  window.prepareEditReward = function(rewardId) {
-    const reward = rewards.find(r => r.id === rewardId);
-    if (!reward) return;
-
-    document.getElementById('edit-reward-id').value = reward.id;
-    document.getElementById('rew-title').value = reward.title;
-    document.getElementById('rew-desc').value = reward.desc || '';
-    document.getElementById('rew-cost').value = reward.cost;
-    
-    currentRewardIconBase64 = reward.icon || '🥨';
-    const isImg = currentRewardIconBase64.startsWith('data:image') || currentRewardIconBase64.startsWith('http');
-    
-    const imgEl = document.getElementById('rew-icon-img');
-    const placeholderEl = document.getElementById('rew-icon-placeholder');
-    
-    if (isImg) {
-      imgEl.src = currentRewardIconBase64;
-      imgEl.style.display = 'block';
-      placeholderEl.style.display = 'none';
-    } else {
-      placeholderEl.innerText = currentRewardIconBase64;
-      imgEl.style.display = 'none';
-      placeholderEl.style.display = 'block';
-    }
-
-    document.getElementById('reward-form-title').innerText = 'แก้ไขรายการของรางวัล';
-    document.getElementById('reward-submit-btn').innerText = 'บันทึกการแก้ไข';
-    document.getElementById('reward-cancel-btn').style.display = 'inline-block';
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  // ฟังก์ชันล้างฟอร์มกลับสู่โหมดเพิ่มใหม่
-  window.resetRewardForm = function() {
-    document.getElementById('edit-reward-id').value = '';
-    document.getElementById('rew-title').value = '';
-    document.getElementById('rew-desc').value = '';
-    document.getElementById('rew-cost').value = '';
-    currentRewardIconBase64 = '🥨';
-    
-    document.getElementById('rew-icon-img').style.display = 'none';
-    document.getElementById('rew-icon-placeholder').style.display = 'block';
-    document.getElementById('rew-icon-placeholder').innerText = '🥨';
-
-    document.getElementById('reward-form-title').innerText = 'เพิ่ม / จัดการรายการของรางวัล';
-    document.getElementById('reward-submit-btn').innerText = 'เพิ่ม';
-    document.getElementById('reward-cancel-btn').style.display = 'none';
-  }
-
-  // ฟังก์ชันจัดการบันทึก (รองรับทั้งเพิ่มใหม่ และแก้ไขของเดิม)
-  window.handleSaveReward = async function(e) {
+  window.handleAddReward = async function(e) {
     e.preventDefault();
-    const editId = document.getElementById('edit-reward-id').value;
     const icon = currentRewardIconBase64 || '🥨';
     const title = document.getElementById('rew-title').value.trim();
     const desc = document.getElementById('rew-desc').value.trim();
     const cost = parseInt(document.getElementById('rew-cost').value);
 
-    if (editId) {
-      // โหมดแก้ไข
-      const rewardIndex = rewards.findIndex(r => r.id === editId);
-      if (rewardIndex !== -1) {
-        rewards[rewardIndex] = { id: editId, icon, title, desc, cost };
-        try {
-          await setDoc(doc(db, "rewards", editId), rewards[rewardIndex]);
-          alert('แก้ไขของรางวัลสำเร็จ!');
-          resetRewardForm();
-          renderAdminTables();
-          renderCustomerRewards();
-        } catch (error) {
-          console.error("Error updating reward: ", error);
-          alert('เกิดข้อผิดพลาดในการบันทึกการแก้ไข');
-        }
-      }
-    } else {
-      // โหมดเพิ่มใหม่
-      const newId = 'rew_' + Date.now();
-      const newReward = { id: newId, icon, title, desc, cost };
+    const newId = 'rew_' + Date.now();
+    const newReward = { id: newId, icon, title, desc, cost };
 
-      try {
-        await setDoc(doc(db, "rewards", newId), newReward);
-        rewards.push(newReward);
-        alert('เพิ่มของรางวัลสำเร็จ!');
-        resetRewardForm();
-        renderAdminTables();
-        renderCustomerRewards();
-      } catch (error) {
-        console.error("Error adding reward: ", error);
-        alert('เกิดข้อผิดพลาดในการบันทึกของรางวัล (ไฟล์รูปใหญ่เกินไป กรุณาลองเลือกรูปขนาดเล็กลง)');
-      }
+    try {
+      await setDoc(doc(db, "rewards", newId), newReward);
+      rewards.push(newReward);
+      alert('เพิ่มของรางวัลสำเร็จ!');
+      e.target.reset();
+      
+      currentRewardIconBase64 = '🥨';
+      document.getElementById('rew-icon-img').style.display = 'none';
+      document.getElementById('rew-icon-placeholder').style.display = 'block';
+
+      renderAdminTables();
+      renderCustomerRewards();
+    } catch (error) {
+      console.error("Error adding reward: ", error);
+      alert('เกิดข้อผิดพลาดในการบันทึกของรางวัล (ไฟล์รูปใหญ่เกินไป กรุณาลองเลือกรูปขนาดเล็กลง)');
     }
   }
 
@@ -1592,8 +1516,22 @@
 
   loadDataFromFirebase();
 
+  // ตรวจสอบค่า Hash จาก URL เพื่อเปิดหน้าเว็บให้ตรงกับลิงก์ที่เข้าใช้งาน
   window.addEventListener('DOMContentLoaded', () => {
-    switchMainTab('members');
+    const hash = window.location.hash;
+    if (hash === '#/cust') {
+      switchMainTab('cust');
+    } else if (hash === '#/pos') {
+      switchMainTab('pos');
+    } else if (hash === '#/admin') {
+      switchMainTab('admin');
+    } else if (hash === '#/admin-coupons') {
+      switchMainTab('admin-coupons');
+    } else if (hash === '#/members') {
+      switchMainTab('members');
+    } else {
+      switchMainTab('members'); // ค่าเริ่มต้นกรณีไม่มีแฮช
+    }
   });
 </script>
 
