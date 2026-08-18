@@ -321,12 +321,31 @@
       margin-bottom: 12px;
       cursor: pointer;
       padding: 14px 16px;
+      position: relative;
+    }
+    .coupon-ticket.used {
+      border-left-color: #9e9e9e;
+      background: #fafafa;
+      opacity: 0.7;
     }
     .coupon-left { width: 20%; display: flex; justify-content: center; align-items: center; font-size: 26px; }
     .coupon-right { width: 80%; padding-left: 12px; }
     .coupon-brand { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--bloom-green); }
+    .coupon-ticket.used .coupon-brand { color: #757575; }
     .coupon-title { font-size: 15px; font-weight: 700; color: var(--text-main); margin-top: 2px; }
     .coupon-expiry { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .coupon-used-badge {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #e0e0e0;
+      color: #616161;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 12px;
+    }
 
     /* Modal */
     .modal-overlay {
@@ -397,7 +416,6 @@
 </head>
 <body>
 
-<!-- Left Sidebar Navigation -->
 <aside class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-brand-logo">BLOOM</div>
@@ -407,7 +425,6 @@
     <button id="tab-cust" onclick="switchMainTab('cust')">👤 ฝั่งลูกค้า</button>
     <button id="tab-pos" onclick="switchMainTab('pos')">📱 POS หน้าร้าน</button>
     
-    <!-- Admin Dropdown Menu -->
     <div class="sidebar-dropdown">
       <button class="sidebar-dropdown-toggle" id="btn-admin-toggle" onclick="toggleAdminDropdown(event)">
         <span>📊 ระบบแอดมิน</span>
@@ -423,14 +440,11 @@
   </div>
 </aside>
 
-<!-- Main Content -->
 <main class="main-content">
 
-  <!-- ==================== หน้าฝั่งลูกค้า (/customer) ==================== -->
   <div id="page-cust" class="page">
     <div class="container">
       
-      <!-- ฟอร์มเข้าสู่ระบบ / สมัครสมาชิก -->
       <div id="cust-auth-section">
         <div class="app-header">
           <div class="app-brand">
@@ -472,7 +486,6 @@
         </div>
       </div>
 
-      <!-- Dashboard ลูกค้าเมื่อล็อกอินแล้ว -->
       <div id="cust-dashboard-section" style="display: none;">
         
         <div class="app-header">
@@ -485,7 +498,6 @@
           </div>
         </div>
 
-        <!-- Sub Page 1: หน้าแรก -->
         <div id="subtab-home" class="cust-subpage">
           <div class="banner-card">
             <div class="banner-title">Welcome to BLOOM 🥨</div>
@@ -502,21 +514,17 @@
           </div>
         </div>
 
-        <!-- Sub Page 2: แลกของรางวัล -->
         <div id="subtab-redeem" class="cust-subpage" style="display: none;">
           <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">รายการแลกของรางวัล</h3>
           <div id="customer-redeem-list"></div>
         </div>
 
-        <!-- Sub Page 3: คูปอง -->
         <div id="subtab-coupons" class="cust-subpage" style="display: none;">
           <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">คูปองของฉัน</h3>
           <div id="customer-coupons-list">
-            <!-- Dynamic Customer Coupons Rendered Here -->
-          </div>
+            </div>
         </div>
 
-        <!-- Sub Page 4: ประวัติ -->
         <div id="subtab-history" class="cust-subpage" style="display: none;">
           <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">ประวัติการทำรายการ</h3>
           <div class="card">
@@ -530,7 +538,6 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation Bar สำหรับมือถือลูกค้า -->
   <nav class="bottom-nav" id="customer-bottom-nav">
     <button class="bottom-nav-item active" id="bnav-home" onclick="switchCustSubTab('home')">
       <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -550,21 +557,26 @@
     </button>
   </nav>
 
-  <!-- Modal แสดงคูปอง -->
   <div id="coupon-modal" class="modal-overlay" onclick="closeCouponModal(event)">
     <div class="modal-card">
       <div style="position: absolute; left: 16px; top: 16px; cursor: pointer; font-size: 18px; color: var(--text-muted);" onclick="closeCouponModalDirect()">✕</div>
       <div id="m-brand" style="font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--bloom-green);">BLOOM PRETZEL</div>
       <div id="m-title" style="font-size: 18px; font-weight: 700; margin: 6px 0; color: var(--text-main);">ส่วนลด 20 บาท</div>
-      <div id="m-desc" style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;"></div>
-      <div style="padding-top: 16px; border-top: 1px dashed var(--border-light);">
-        <div style="width: 75%; height: 40px; background: repeating-linear-gradient(90deg, #333 0, #333 2px, #fff 2px, #fff 4px); margin: 8px auto;"></div>
+      <div id="m-desc" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;"></div>
+      
+      <div style="padding-top: 12px; border-top: 1px dashed var(--border-light); margin-bottom: 16px;">
+        <div style="width: 75%; height: 36px; background: repeating-linear-gradient(90deg, #333 0, #333 2px, #fff 2px, #fff 4px); margin: 6px auto;"></div>
         <div style="font-size: 10px; color: var(--text-muted); font-family: monospace; letter-spacing: 1px;" id="m-code">BLM-88392019203</div>
+      </div>
+
+      <div id="m-action-container">
+        <button id="use-coupon-btn" onclick="useCurrentCoupon()" class="btn" style="background-color: var(--bloom-green);">
+          พนักงานกดใช้คูปอง
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal ดูใบเสร็จรูปใหญ่ -->
   <div id="receipt-modal" class="modal-overlay" onclick="closeReceiptModal(event)">
     <div class="modal-card" style="max-width: 420px; padding: 16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -575,7 +587,6 @@
     </div>
   </div>
 
-  <!-- Modal ดูประวัติสมาชิกโดยแอดมิน -->
   <div id="admin-member-history-modal" class="modal-overlay" onclick="closeAdminMemberHistoryModal(event)">
     <div class="modal-card" style="max-width: 520px; text-align: left; padding: 24px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">
@@ -586,12 +597,10 @@
         <span style="cursor:pointer; font-size: 18px; font-weight: 700;" onclick="closeAdminMemberHistoryModalDirect()">✕</span>
       </div>
       <div id="adm-modal-history-list" style="max-height: 380px; overflow-y: auto;">
-        <!-- รายการประวัติ -->
-      </div>
+        </div>
     </div>
   </div>
 
-  <!-- ==================== หน้าที่ 2: POS หน้าร้าน (/frontstore) ==================== -->
   <div id="page-pos" class="page">
     <div class="container">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">📱 POS หน้าร้าน (สะสมคะแนน)</h2>
@@ -603,7 +612,6 @@
             <input type="tel" id="pos-phone" placeholder="08XXXXXXXX" required pattern="[0-9]{9,10}" oninput="searchCustomerLive(this.value)">
           </div>
 
-          <!-- กล่องแสดงข้อมูลลูกค้า & แจ้งเตือนวันเกิด -->
           <div id="pos-cust-info" class="customer-info-box">
             <div class="cust-info-name" id="pos-cust-name">-</div>
             <div class="cust-info-detail" id="pos-cust-detail">-</div>
@@ -614,7 +622,6 @@
             <label>ยอดรวมหลังหักส่วนลด (บาท) *</label>
             <input type="number" id="pos-amount" step="0.01" placeholder="0.00" min="1" required oninput="calcPointsLive(this.value)">
             
-            <!-- กล่องโชว์คะแนนคำนวณแบบ Real-time -->
             <div class="points-calc-box" id="points-calc-box">
               <span class="points-calc-label">✨ คะแนนที่จะได้รับ (100 บาท = 1 คะแนน):</span>
               <span class="points-calc-val" id="disp-calc-pts">+0 P</span>
@@ -656,16 +663,13 @@
     </div>
   </div>
 
-  <!-- ==================== หน้าที่ 3: Admin - การจัดการรางวัล (/admin) ==================== -->
   <div id="page-admin" class="page">
     <div class="container-wide">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">🎁 การจัดการรางวัล (Redeem Items)</h2>
       
-      <!-- ส่วนจัดการรายการของรางวัล (Redeem Items) -->
       <div class="card" style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">เพิ่ม / จัดการรายการของรางวัล</h3>
         
-        <!-- ฟอร์มเพิ่มของรางวัล -->
         <form onsubmit="handleAddReward(event)" style="background: #fafafa; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 16px;">
           <div style="display: grid; grid-template-columns: 2fr 3fr 1.5fr 1fr; gap: 10px; align-items: flex-end;">
             
@@ -701,7 +705,6 @@
           </div>
         </form>
 
-        <!-- ตารางแสดงรายการของรางวัลปัจจุบัน -->
         <div style="overflow-x: auto;">
           <table>
             <thead>
@@ -721,7 +724,6 @@
     </div>
   </div>
 
-  <!-- ==================== หน้าที่ 3.2: Admin - การจัดการคูปอง (/admin-coupons) ==================== -->
   <div id="page-admin-coupons" class="page">
     <div class="container-wide">
       <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--bloom-green);">🏷️ การจัดการคูปอง (Coupons Management)</h2>
@@ -777,7 +779,6 @@
     </div>
   </div>
 
-  <!-- ==================== หน้าที่ 4: ฐานข้อมูลสมาชิก (/members) ==================== -->
   <div id="page-members" class="page active">
     <div class="container-wide">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -787,12 +788,10 @@
         </button>
       </div>
       
-      <!-- ส่วนจัดการรายชื่อสมาชิก -->
       <div class="card" style="margin-bottom: 24px;">
         <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">รายชื่อสมาชิกทั้งหมด</h3>
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">💡 คลิกที่แถวรายชื่อของลูกค้าเพื่อดูประวัติการสะสมคะแนน / แลกรางวัล และดูรูปใบเสร็จย้อนหลัง</p>
         
-        <!-- ช่องค้นหาเบอร์โทรหรือชื่อลูกค้า -->
         <div class="form-group" style="margin-bottom: 16px;">
           <input type="text" id="member-search-input" placeholder="🔍 ค้นหาด้วยเบอร์โทรศัพท์ หรือ ชื่อลูกค้า..." oninput="renderAdminTables()">
         </div>
@@ -818,7 +817,6 @@
 
 </main>
 
-<!-- Firebase SDKs & Script Logic -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -847,6 +845,7 @@
   let currentLoggedInMember = null;
   let currentReceiptBase64 = null;
   let currentRewardIconBase64 = '🥨';
+  let activeCouponIdInModal = null; // เก็บไอดีคูปองที่กำลังเปิดดูใน Modal
 
   // ฟังก์ชันช่วยย่อและบีบอัดขนาดรูปภาพให้อัตโนมัติ (ป้องกันไฟล์ใหญ่เกิน 1MB ของ Firestore)
   function compressImage(file, maxWidth = 200, maxHeight = 200, quality = 0.7) {
@@ -1093,7 +1092,7 @@
       return;
     }
 
-    const newMember = { name: name, phone: phone, dob: dob, points: 0, history: [] };
+    const newMember = { name: name, phone: phone, dob: dob, points: 0, history: [], usedCoupons: [] };
     
     try {
       await setDoc(doc(db, "members", phone), newMember);
@@ -1171,16 +1170,22 @@
       return;
     }
 
-    couponsListEl.innerHTML = coupons.map(c => `
-      <div class="coupon-ticket" onclick="openCouponModal('${c.brand.replace(/'/g, "\\'")}', '${c.title.replace(/'/g, "\\'")}', '${c.desc.replace(/'/g, "\\'")}', '${c.code || 'BLM-88392019203'}')">
-        <div class="coupon-left">${c.icon || '🥨'}</div>
-        <div class="coupon-right">
-          <div class="coupon-brand">${c.brand}</div>
-          <div class="coupon-title">${c.title}</div>
-          <div class="coupon-expiry">หมดอายุ ${c.expiry}</div>
+    const usedList = currentLoggedInMember?.usedCoupons || [];
+
+    couponsListEl.innerHTML = coupons.map(c => {
+      const isUsed = usedList.includes(c.id);
+      return `
+        <div class="coupon-ticket ${isUsed ? 'used' : ''}" onclick="openCouponModal('${c.id}', '${c.brand.replace(/'/g, "\\'")}', '${c.title.replace(/'/g, "\\'")}', '${c.desc.replace(/'/g, "\\'")}', '${c.code || 'BLM-88392019203'}')">
+          <div class="coupon-left">${c.icon || '🥨'}</div>
+          <div class="coupon-right">
+            <div class="coupon-brand">${c.brand}</div>
+            <div class="coupon-title">${c.title}</div>
+            <div class="coupon-expiry">หมดอายุ ${c.expiry}</div>
+          </div>
+          ${isUsed ? `<div class="coupon-used-badge">ถูกใช้งานแล้ว</div>` : ''}
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   window.handleLogout = function() {
@@ -1253,7 +1258,7 @@
 
     let member = members.find(m => m.phone === phone);
     if (!member) {
-      member = { name: 'ลูกค้าหน้าร้าน', phone: phone, dob: '', points: 0, history: [] };
+      member = { name: 'ลูกค้าหน้าร้าน', phone: phone, dob: '', points: 0, history: [], usedCoupons: [] };
       members.push(member);
     }
 
@@ -1287,13 +1292,69 @@
     }
   }
 
-  window.openCouponModal = function(brand, title, desc, code) {
+  window.openCouponModal = function(id, brand, title, desc, code) {
+    activeCouponIdInModal = id;
     document.getElementById('m-brand').innerText = brand;
     document.getElementById('m-title').innerText = title;
     document.getElementById('m-desc').innerText = desc;
     document.getElementById('m-code').innerText = code || 'BLM-88392019203';
+    
+    const actionContainer = document.getElementById('m-action-container');
+    const isUsed = currentLoggedInMember?.usedCoupons?.includes(id);
+
+    if (isUsed) {
+      actionContainer.innerHTML = `
+        <div style="background-color: #f5f5f5; color: #757575; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+          ✓ คูปองนี้ถูกใช้งานแล้ว
+        </div>
+      `;
+    } else {
+      actionContainer.innerHTML = `
+        <button id="use-coupon-btn" onclick="useCurrentCoupon()" class="btn" style="background-color: var(--bloom-green);">
+          พนักงานกดใช้คูปอง
+        </button>
+      `;
+    }
+
     document.getElementById('coupon-modal').style.display = 'flex';
   }
+
+  window.useCurrentCoupon = async function() {
+    if (!currentLoggedInMember || !activeCouponIdInModal) return;
+
+    if (!currentLoggedInMember.usedCoupons) {
+      currentLoggedInMember.usedCoupons = [];
+    }
+
+    if (currentLoggedInMember.usedCoupons.includes(activeCouponIdInModal)) {
+      alert("คูปองนี้ถูกใช้งานไปแล้ว");
+      return;
+    }
+
+    if (confirm("ยืนยันให้พนักงานใช้คูปองนี้สำหรับลูกค้า?")) {
+      currentLoggedInMember.usedCoupons.push(activeCouponIdInModal);
+
+      const couponObj = coupons.find(c => c.id === activeCouponIdInModal);
+      const couponTitle = couponObj ? couponObj.title : 'คูปองส่วนลด';
+
+      currentLoggedInMember.history.unshift({
+        date: new Date().toLocaleString('th-TH'),
+        title: `ใช้คูปอง: ${couponTitle}`,
+        points: 0
+      });
+
+      try {
+        await setDoc(doc(db, "members", currentLoggedInMember.phone), currentLoggedInMember);
+        alert("บันทึกการใช้คูปองสำเร็จ!");
+        renderCustomerDashboard();
+        document.getElementById('coupon-modal').style.display = 'none';
+      } catch (error) {
+        console.error("Error using coupon: ", error);
+        alert("เกิดข้อผิดพลาดในการบันทึกการใช้คูปอง");
+      }
+    }
+  }
+
   window.closeCouponModal = function(e) { if (e.target.id === 'coupon-modal') document.getElementById('coupon-modal').style.display = 'none'; }
   window.closeCouponModalDirect = function() { document.getElementById('coupon-modal').style.display = 'none'; }
 
