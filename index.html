@@ -946,7 +946,12 @@
       renderCustomerRewards();
       renderCustomerCoupons();
     }
-    window.location.hash = '/' + tabName;
+    
+    // อัปเดต URL Hash โดยหลีกเลี่ยงการเกิด loop ถ้าแฮชตรงกันอยู่แล้ว
+    const newHash = '#/' + tabName;
+    if (window.location.hash !== newHash) {
+      window.location.hash = newHash;
+    }
   }
 
   window.switchCustSubTab = function(subTabName) {
@@ -1133,7 +1138,6 @@
     }).join('');
   }
 
-  // เรนเดอร์คูปองฝั่งลูกค้า เช็คสถานะ "ใช้แล้ว"
   window.renderCustomerCoupons = function() {
     const couponsListEl = document.getElementById('customer-coupons-list');
     if (!couponsListEl) return;
@@ -1270,7 +1274,6 @@
     }
   }
 
-  // เปิด Modal คูปองพร้อมปุ่มกดใช้
   window.openCouponModal = function(couponId, brand, title, desc, code, isUsed) {
     document.getElementById('m-brand').innerText = brand;
     document.getElementById('m-title').innerText = title;
@@ -1287,7 +1290,6 @@
     document.getElementById('coupon-modal').style.display = 'flex';
   }
 
-  // บันทึกสถานะการใช้คูปองของลูกค้า
   window.useCustomerCoupon = async function(couponId) {
     if (!currentLoggedInMember) return;
 
@@ -1333,7 +1335,6 @@
   window.closeReceiptModal = function(e) { if (e.target.id === 'receipt-modal') document.getElementById('receipt-modal').style.display = 'none'; }
   window.closeReceiptModalDirect = function() { document.getElementById('receipt-modal').style.display = 'none'; }
 
-  // Admin View Member History Modal
   window.openAdminMemberHistory = function(phone) {
     const member = members.find(m => m.phone === phone);
     if (!member) return;
@@ -1569,22 +1570,32 @@
 
   loadDataFromFirebase();
 
-  // ตรวจสอบ URL Hash เพื่อเปิดหน้าให้ตรงกับลิงก์
-  window.addEventListener('DOMContentLoaded', () => {
-    const hash = window.location.hash;
-    if (hash.includes('cust')) {
-      switchMainTab('cust');
-    } else if (hash.includes('pos')) {
+  // ฟังก์ชันแยกจัดการเปิดหน้าตาม URL Hash ที่แม่นยำ
+  function handleTabByHash() {
+    const hash = window.location.hash.replace('#/', '').trim();
+    if (hash === 'pos') {
       switchMainTab('pos');
-    } else if (hash.includes('admin-coupons')) {
+    } else if (hash === 'admin-coupons') {
       switchMainTab('admin-coupons');
-    } else if (hash.includes('admin')) {
+    } else if (hash === 'admin') {
       switchMainTab('admin');
-    } else if (hash.includes('members')) {
+    } else if (hash === 'members') {
       switchMainTab('members');
+    } else if (hash === 'cust') {
+      switchMainTab('cust');
     } else {
       switchMainTab('cust'); // ค่าเริ่มต้นเปิดหน้าลูกค้า
     }
+  }
+
+  // ตรวจสอบ URL Hash ตอนโหลดหน้าเว็บครั้งแรก
+  window.addEventListener('DOMContentLoaded', () => {
+    handleTabByHash();
+  });
+
+  // ดักจับเหตุการณ์เมื่อ URL Hash เปลี่ยนแปลง (รองรับปุ่ม Back / Forward หรือการเปลี่ยนลิงก์)
+  window.addEventListener('hashchange', () => {
+    handleTabByHash();
   });
 </script>
 
