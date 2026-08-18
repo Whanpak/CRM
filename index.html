@@ -160,13 +160,15 @@
 
     .form-group { margin-bottom: 16px; text-align: left; }
     .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    /* ตั้งค่า font-size เป็น 16px เพื่อป้องกัน iOS ซูมหน้าจออัตโนมัติเวลาพิมพ์ */
     .form-group input, .form-group select {
       width: 100%;
       padding: 12px 14px;
       border: 1px solid var(--border-light);
       background: #fafafa;
       border-radius: var(--radius-sm);
-      font-size: 14px;
+      font-size: 16px; 
       outline: none;
       transition: border-color 0.2s;
     }
@@ -922,7 +924,6 @@
       targetTab.classList.add('active');
     }
 
-    // ถ้ากดเลือกเมนูย่อยของแอดมิน ให้ไฮไลต์ปุ่ม Toggle แม่ด้วย
     const adminToggle = document.getElementById('btn-admin-toggle');
     const adminDropdownMenu = document.getElementById('admin-dropdown-menu');
     if (tabName === 'admin' || tabName === 'admin-coupons') {
@@ -1311,14 +1312,13 @@
     document.getElementById('admin-member-history-modal').style.display = 'none';
   }
 
-  // ฟังก์ชัน Export รายชื่อสมาชิกเป็นไฟล์ CSV (เปิดใน Excel ได้ถูกต้อง รองรับภาษาไทย UTF-8)
   window.exportMembersToCSV = function() {
     if (members.length === 0) {
       alert("ไม่มีข้อมูลสมาชิกสำหรับ Export");
       return;
     }
 
-    let csvContent = "\uFEFF"; // BOM สำหรับรองรับภาษาไทยใน Excel
+    let csvContent = "\uFEFF"; 
     csvContent += "เบอร์โทรศัพท์,ชื่อ-นามสกุล,วันเกิด,คะแนนสะสม\n";
 
     members.forEach(m => {
@@ -1340,7 +1340,6 @@
   }
 
   window.renderAdminTables = function() {
-    // Render Rewards Table
     const tbodyReward = document.getElementById('admin-rewards-table');
     if (tbodyReward) {
       if (rewards.length === 0) {
@@ -1364,7 +1363,6 @@
       }
     }
 
-    // Render Coupons Table
     const tbodyCoupon = document.getElementById('admin-coupons-table');
     if (tbodyCoupon) {
       if (coupons.length === 0) {
@@ -1387,7 +1385,6 @@
       }
     }
 
-    // Render Members Table with Search Filter & Clickable Row
     const searchInput = document.getElementById('member-search-input');
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
@@ -1530,7 +1527,7 @@
     } else if (hash === '#/members') {
       switchMainTab('members');
     } else {
-      switchMainTab('members'); // ค่าเริ่มต้นกรณีไม่มีแฮช
+      switchMainTab('members');
     }
   });
 </script>
