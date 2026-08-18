@@ -160,15 +160,13 @@
 
     .form-group { margin-bottom: 16px; text-align: left; }
     .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    /* ตั้งค่า font-size เป็น 16px เพื่อป้องกัน iOS ซูมหน้าจออัตโนมัติเวลาพิมพ์ */
     .form-group input, .form-group select {
       width: 100%;
       padding: 12px 14px;
       border: 1px solid var(--border-light);
       background: #fafafa;
       border-radius: var(--radius-sm);
-      font-size: 16px; 
+      font-size: 14px;
       outline: none;
       transition: border-color 0.2s;
     }
@@ -419,7 +417,7 @@
       </div>
     </div>
 
-    <button id="tab-members" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
+    <button id="tab-members" class="active" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
   </div>
 </aside>
 
@@ -550,6 +548,7 @@
         <div style="width: 75%; height: 40px; background: repeating-linear-gradient(90deg, #333 0, #333 2px, #fff 2px, #fff 4px); margin: 8px auto;"></div>
         <div style="font-size: 10px; color: var(--text-muted); font-family: monospace; letter-spacing: 1px;" id="m-code">BLM-88392019203</div>
       </div>
+      <div id="coupon-action-area" style="margin-top: 16px; text-align: center;"></div>
     </div>
   </div>
 
@@ -755,7 +754,7 @@
     </div>
   </div>
 
-  <div id="page-members" class="page">
+  <div id="page-members" class="page active">
     <div class="container-wide">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="font-size: 18px; font-weight: 700; color: var(--bloom-green); margin: 0;">👥 ฐานข้อมูลสมาชิก (Customer Database)</h2>
@@ -1066,7 +1065,7 @@
       return;
     }
 
-    const newMember = { name: name, phone: phone, dob: dob, points: 0, history: [] };
+    const newMember = { name: name, phone: phone, dob: dob, points: 0, history: [], usedCoupons: [] };
     
     try {
       await setDoc(doc(db, "members", phone), newMember);
@@ -1135,6 +1134,7 @@
     }).join('');
   }
 
+  // เรนเดอร์คูปองฝั่งลูกค้า เช็คสถานะ "ใช้แล้ว"
   window.renderCustomerCoupons = function() {
     const couponsListEl = document.getElementById('customer-coupons-list');
     if (!couponsListEl) return;
@@ -1144,16 +1144,25 @@
       return;
     }
 
-    couponsListEl.innerHTML = coupons.map(c => `
-      <div class="coupon-ticket" onclick="openCouponModal('${c.brand.replace(/'/g, "\\'")}', '${c.title.replace(/'/g, "\\'")}', '${c.desc.replace(/'/g, "\\'")}', '${c.code || 'BLM-88392019203'}')">
-        <div class="coupon-left">${c.icon || '🥨'}</div>
-        <div class="coupon-right">
-          <div class="coupon-brand">${c.brand}</div>
-          <div class="coupon-title">${c.title}</div>
-          <div class="coupon-expiry">หมดอายุ ${c.expiry}</div>
+    const usedCoupons = currentLoggedInMember && currentLoggedInMember.usedCoupons ? currentLoggedInMember.usedCoupons : [];
+
+    couponsListEl.innerHTML = coupons.map(c => {
+      const isUsed = usedCoupons.includes(c.id);
+      
+      return `
+        <div class="coupon-ticket" style="${isUsed ? 'opacity: 0.5; border-left-color: #ccc; background: #fafafa;' : ''}" onclick="openCouponModal('${c.id}', '${c.brand.replace(/'/g, "\\'")}', '${c.title.replace(/'/g, "\\'")}', '${c.desc.replace(/'/g, "\\'")}', '${c.code || 'BLM-88392019203'}', ${isUsed})">
+          <div class="coupon-left">${c.icon || '🥨'}</div>
+          <div class="coupon-right" style="flex:1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div class="coupon-brand">${c.brand}</div>
+              ${isUsed ? '<span style="font-size:10px; background:#eee; color:#666; padding:2px 6px; border-radius:4px; font-weight:700;">ใช้แล้ว</span>' : '<span style="font-size:10px; background:#eef2ed; color:var(--bloom-green); padding:2px 6px; border-radius:4px; font-weight:700;">กดใช้ได้</span>'}
+            </div>
+            <div class="coupon-title">${c.title}</div>
+            <div class="coupon-expiry">หมดอายุ ${c.expiry}</div>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   window.handleLogout = function() {
@@ -1179,6 +1188,7 @@
         title: `แลกรับ: ${itemName}`,
         points: -pointsCost
       };
+      if (!currentLoggedInMember.history) currentLoggedInMember.history = [];
       currentLoggedInMember.history.unshift(newHistoryItem);
 
       try {
@@ -1226,7 +1236,7 @@
 
     let member = members.find(m => m.phone === phone);
     if (!member) {
-      member = { name: 'ลูกค้าหน้าร้าน', phone: phone, dob: '', points: 0, history: [] };
+      member = { name: 'ลูกค้าหน้าร้าน', phone: phone, dob: '', points: 0, history: [], usedCoupons: [] };
       members.push(member);
     }
 
@@ -1240,6 +1250,7 @@
       staff: staff,
       receiptImg: currentReceiptBase64 || ""
     };
+    if (!member.history) member.history = [];
     member.history.unshift(historyItem);
 
     try {
@@ -1260,13 +1271,59 @@
     }
   }
 
-  window.openCouponModal = function(brand, title, desc, code) {
+  // เปิด Modal คูปองพร้อมปุ่มกดใช้
+  window.openCouponModal = function(couponId, brand, title, desc, code, isUsed) {
     document.getElementById('m-brand').innerText = brand;
     document.getElementById('m-title').innerText = title;
     document.getElementById('m-desc').innerText = desc;
     document.getElementById('m-code').innerText = code || 'BLM-88392019203';
+    
+    let actionArea = document.getElementById('coupon-action-area');
+    if (isUsed) {
+      actionArea.innerHTML = `<button class="btn btn-secondary" disabled style="background:#e0e0e0; color:#888; width:100%; padding:10px; border-radius:8px; border:none; font-weight:600; cursor:not-allowed;">คูปองนี้ถูกใช้งานแล้ว</button>`;
+    } else {
+      actionArea.innerHTML = `<button class="btn" onclick="useCustomerCoupon('${couponId}')" style="background:var(--bloom-green); color:#fff; width:100%; padding:10px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">🚀 กดใช้คูปองนี้</button>`;
+    }
+
     document.getElementById('coupon-modal').style.display = 'flex';
   }
+
+  // บันทึกสถานะการใช้คูปองของลูกค้า
+  window.useCustomerCoupon = async function(couponId) {
+    if (!currentLoggedInMember) return;
+
+    if (confirm('ยืนยันการใช้คูปองนี้? เมื่อกดใช้แล้วจะไม่สามารถนำกลับมาใช้ซ้ำได้')) {
+      if (!currentLoggedInMember.usedCoupons) {
+        currentLoggedInMember.usedCoupons = [];
+      }
+
+      if (!currentLoggedInMember.usedCoupons.includes(couponId)) {
+        currentLoggedInMember.usedCoupons.push(couponId);
+      }
+
+      const newHistoryItem = {
+        date: new Date().toLocaleString('th-TH'),
+        title: `ใช้คูปองส่วนลด`,
+        points: 0
+      };
+      
+      if (!currentLoggedInMember.history) {
+        currentLoggedInMember.history = [];
+      }
+      currentLoggedInMember.history.unshift(newHistoryItem);
+
+      try {
+        await setDoc(doc(db, "members", currentLoggedInMember.phone), currentLoggedInMember);
+        alert('ใช้คูปองสำเร็จ! กรุณายื่นหน้าจอนี้ให้พนักงานหน้าร้าน');
+        document.getElementById('coupon-modal').style.display = 'none';
+        renderCustomerCoupons();
+      } catch (error) {
+        console.error("Error using coupon: ", error);
+        alert("เกิดข้อผิดพลาดในการใช้คูปอง");
+      }
+    }
+  }
+
   window.closeCouponModal = function(e) { if (e.target.id === 'coupon-modal') document.getElementById('coupon-modal').style.display = 'none'; }
   window.closeCouponModalDirect = function() { document.getElementById('coupon-modal').style.display = 'none'; }
 
@@ -1312,13 +1369,14 @@
     document.getElementById('admin-member-history-modal').style.display = 'none';
   }
 
+  // ฟังก์ชัน Export รายชื่อสมาชิกเป็นไฟล์ CSV
   window.exportMembersToCSV = function() {
     if (members.length === 0) {
       alert("ไม่มีข้อมูลสมาชิกสำหรับ Export");
       return;
     }
 
-    let csvContent = "\uFEFF"; 
+    let csvContent = "\uFEFF"; // BOM สำหรับรองรับภาษาไทยใน Excel
     csvContent += "เบอร์โทรศัพท์,ชื่อ-นามสกุล,วันเกิด,คะแนนสะสม\n";
 
     members.forEach(m => {
@@ -1513,22 +1571,8 @@
 
   loadDataFromFirebase();
 
-  // ตรวจสอบค่า Hash จาก URL เพื่อเปิดหน้าเว็บให้ตรงกับลิงก์ที่เข้าใช้งาน
   window.addEventListener('DOMContentLoaded', () => {
-    const hash = window.location.hash;
-    if (hash === '#/cust') {
-      switchMainTab('cust');
-    } else if (hash === '#/pos') {
-      switchMainTab('pos');
-    } else if (hash === '#/admin') {
-      switchMainTab('admin');
-    } else if (hash === '#/admin-coupons') {
-      switchMainTab('admin-coupons');
-    } else if (hash === '#/members') {
-      switchMainTab('members');
-    } else {
-      switchMainTab('members');
-    }
+    switchMainTab('members');
   });
 </script>
 
