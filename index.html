@@ -417,7 +417,7 @@
       </div>
     </div>
 
-    <button id="tab-members" class="active" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
+    <button id="tab-members" onclick="switchMainTab('members')">👥 ฐานข้อมูลสมาชิก</button>
   </div>
 </aside>
 
@@ -754,7 +754,7 @@
     </div>
   </div>
 
-  <div id="page-members" class="page active">
+  <div id="page-members" class="page">
     <div class="container-wide">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2 style="font-size: 18px; font-weight: 700; color: var(--bloom-green); margin: 0;">👥 ฐานข้อมูลสมาชิก (Customer Database)</h2>
@@ -821,7 +821,6 @@
   let currentReceiptBase64 = null;
   let currentRewardIconBase64 = '🥨';
 
-  // ฟังก์ชันช่วยย่อและบีบอัดขนาดรูปภาพให้อัตโนมัติ (ป้องกันไฟล์ใหญ่เกิน 1MB ของ Firestore)
   function compressImage(file, maxWidth = 200, maxHeight = 200, quality = 0.7) {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -1369,14 +1368,13 @@
     document.getElementById('admin-member-history-modal').style.display = 'none';
   }
 
-  // ฟังก์ชัน Export รายชื่อสมาชิกเป็นไฟล์ CSV
   window.exportMembersToCSV = function() {
     if (members.length === 0) {
       alert("ไม่มีข้อมูลสมาชิกสำหรับ Export");
       return;
     }
 
-    let csvContent = "\uFEFF"; // BOM สำหรับรองรับภาษาไทยใน Excel
+    let csvContent = "\uFEFF";
     csvContent += "เบอร์โทรศัพท์,ชื่อ-นามสกุล,วันเกิด,คะแนนสะสม\n";
 
     members.forEach(m => {
@@ -1571,8 +1569,22 @@
 
   loadDataFromFirebase();
 
+  // ตรวจสอบ URL Hash เพื่อเปิดหน้าให้ตรงกับลิงก์
   window.addEventListener('DOMContentLoaded', () => {
-    switchMainTab('members');
+    const hash = window.location.hash;
+    if (hash.includes('cust')) {
+      switchMainTab('cust');
+    } else if (hash.includes('pos')) {
+      switchMainTab('pos');
+    } else if (hash.includes('admin-coupons')) {
+      switchMainTab('admin-coupons');
+    } else if (hash.includes('admin')) {
+      switchMainTab('admin');
+    } else if (hash.includes('members')) {
+      switchMainTab('members');
+    } else {
+      switchMainTab('cust'); // ค่าเริ่มต้นเปิดหน้าลูกค้า
+    }
   });
 </script>
 
